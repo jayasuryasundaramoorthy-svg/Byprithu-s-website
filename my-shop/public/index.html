@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Shop</title>
+<style>
+:root{--bg:#faf8f5;--card:#fff;--tx:#1f1d1a;--mu:#6f6a62;--bd:#e5e0d8;--ac:#c2410c;--act:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#171513;--card:#211f1c;--tx:#f2eee8;--mu:#a09a90;--bd:#38342f;--ac:#f97316;--act:#1a1209}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.w{max-width:640px;margin:0 auto;padding:16px}h1{font-size:1.4rem;margin:.2em 0 .6em}h2{font-size:1.1rem;margin:1em 0 .4em}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
+input,textarea{width:100%;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}textarea{min-height:70px}
+button,.btn{display:inline-block;width:100%;padding:13px;margin-top:12px;border:0;border-radius:12px;background:var(--ac);color:var(--act);font:600 1rem inherit;text-align:center;text-decoration:none;cursor:pointer}
+button.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}button.sm{width:auto;padding:7px 12px;margin:6px 6px 0 0;font-size:.85rem}
+img.p{width:100%;max-height:320px;object-fit:cover;border-radius:12px}.thumb{width:90px;height:90px;object-fit:cover;border-radius:10px}
+.price{font-size:1.3rem;font-weight:700;color:var(--ac)}.mu{color:var(--mu);font-size:.85rem}.row{display:flex;gap:10px;align-items:center}
+.tabs{display:flex;gap:8px}.tabs button{margin:0}.chk{display:flex;gap:10px;align-items:center;margin-top:12px}.chk input{width:auto}
+.ok{color:#15803d;font-weight:600}.link{word-break:break-all;font-size:.85rem;background:var(--bg);padding:8px;border-radius:8px;margin-top:6px}
+</style></head><body><div class="w" id="app">Loading…</div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let products=[],orders=[],tab='products',editing=null,buying=false,custImg='';
+let pw=sessionStorage.getItem('pw')||'';
+const H=()=>({'Content-Type':'application/json','x-admin-password':pw});
+async function api(path,opt={}){const r=await fetch('/api/'+path,{...opt,headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Error');return j}
+function shrink(f,max){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};i.onerror=rej;i.src=r.result};r.onerror=rej;r.readAsDataURL(f)})}
+const path=location.pathname;
+
+async function start(){
+ if(path==='/admin')return adminStart();
+ try{products=await api('products')}catch(e){app.innerHTML='<div class="card">Could not load. '+esc(e.message)+'</div>';return}
+ if(path.startsWith('/p/'))return product(path.slice(3));
+ app.innerHTML='<h1>🛍️ Shop</h1>'+(products.map(p=>`<a href="/p/${p.id}" style="text-decoration:none;color:inherit"><div class="card row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div><b>${esc(p.name)}</b><div class="price">₹${esc(p.price)}</div></div></div></a>`).join('')||'<p class="mu">No products yet.</p>');
+}
+
+/* ---- customer ---- */
+function product(id){
+ const p=products.find(x=>x.id===id);
+ if(!p){app.innerHTML='<div class="card">Product not found.</div>';return}
+ document.title=p.name;
+ let h=`${p.image?`<img class="p" src="${p.image}">`:''}<h1>${esc(p.name)}</h1><div class="price">₹${esc(p.price)}</div><p style="white-space:pre-wrap">${esc(p.desc)}</p>`;
+ if(!buying)h+=`<button onclick="buying=true;product('${id}')">Buy now</button>`;
+ else h+=`<div class="card"><h2>Delivery details</h2>
+ <label>Name</label><input id="cn" autocomplete="name">
+ <label>Door number &amp; address</label><textarea id="ca" autocomplete="street-address"></textarea>
+ <label>City</label><input id="cc"><label>State</label><input id="cs">
+ <label>Pincode</label><input id="cp" inputmode="numeric" maxlength="6">
+ <label>Contact number</label><input id="ct" type="tel" inputmode="tel" autocomplete="tel">
+ <label>Notes (if any)</label><textarea id="cx"></textarea>
+ ${p.allowUpload?`<label>Upload your image</label><input type="file" accept="image/*" onchange="pick(this)"><img id="pv" class="p" style="display:none;margin-top:8px">`:''}
+ <button id="pay" onclick="pay('${id}')">Pay now</button><div id="msg" class="mu"></div></div>`;
+ app.innerHTML=h;
+}
+async function pick(i){const f=i.files[0];if(!f)return;custImg=await shrink(f,900);const v=$('#pv');v.src=custImg;v.style.display='block'}
+async function pay(id){
+ const v=k=>$('#'+k).value.trim();
+ const b={productId:id,name:v('cn'),address:v('ca'),city:v('cc'),state:v('cs'),pincode:v('cp'),phone:v('ct'),notes:v('cx'),image:custImg};
+ if(!b.name||!b.address||!b.city||!b.state||!b.pincode||!b.phone){alert('Please fill all required fields');return}
+ if(!/^\d{6}$/.test(b.pincode)){alert('Enter a valid 6-digit pincode');return}
+ if(!/^\d{10}$/.test(b.phone.replace(/\D/g,'').slice(-10))){alert('Enter a valid contact number');return}
+ const btn=$('#pay');btn.disabled=true;
+ try{const r=await api('orders',{method:'POST',body:JSON.stringify(b)});
+  $('#msg').innerHTML='<span class="ok">Order saved ✓</span>';
+  if(r.payLink)location.href=r.payLink;else $('#msg').innerHTML+=' Payment link not set yet — the seller will contact you.';
+ }catch(e){btn.disabled=false;alert(e.message)}
+}
+
+/* ---- admin ---- */
+async function adminStart(){
+ if(!pw){app.innerHTML=`<h1>Admin login</h1><div class="card"><label>Password</label><input id="pw" type="password"><button onclick="login()">Login</button></div>`;return}
+ try{[products,orders]=await Promise.all([api('products'),api('orders')])}catch(e){pw='';sessionStorage.removeItem('pw');app.innerHTML='<div class="card">'+esc(e.message)+'</div><button onclick="location.reload()">Try again</button>';return}
+ admin();
+}
+function login(){pw=$('#pw').value;sessionStorage.setItem('pw',pw);adminStart()}
+function admin(){
+ let h=`<h1>Admin Panel</h1><div class="tabs"><button class="${tab==='products'?'':'s'}" onclick="tab='products';editing=null;admin()">Products</button><button class="${tab==='orders'?'':'s'}" onclick="tab='orders';admin()">Orders (${orders.length})</button></div>`;
+ if(tab==='products'){const e=editing||{};
+  h+=`<div class="card"><h2>${editing?'Edit':'Add'} product</h2>
+  <label>Product name</label><input id="pn" value="${esc(e.name)}">
+  <label>Price (₹)</label><input id="pp" type="number" inputmode="decimal" value="${esc(e.price)}">
+  <label>Description</label><textarea id="pd">${esc(e.desc)}</textarea>
+  <label>Product photo</label><input id="pi" type="file" accept="image/*">
+  <div class="chk"><input type="checkbox" id="pu" ${e.allowUpload?'checked':''}><span>Let customer upload an image (ON/OFF)</span></div>
+  <label>Razorpay payment link</label><input id="pl" type="url" placeholder="https://rzp.io/..." value="${esc(e.payLink)}">
+  <button onclick="save()">${editing?'Update product':'Save product & get link'}</button>${editing?'<button class="s" onclick="editing=null;admin()">Cancel</button>':''}
+  <div id="res"></div></div><h2>All products</h2>`;
+  h+=products.map(p=>`<div class="card row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Upload: ${p.allowUpload?'ON':'OFF'}</div><div class="link">${location.origin}/p/${p.id}</div>
+  <button class="sm" onclick="copyL('${p.id}')">Copy link</button><button class="sm s" onclick="editP('${p.id}')">Edit</button><button class="sm s" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')||'<p class="mu">No products yet.</p>';
+ }else{
+  h+=`<button class="s" onclick="adminStart()">Refresh</button>`+orders.map(o=>`<div class="card"><b>${esc(o.productName)}</b> · ₹${esc(o.price)} <span class="mu">${new Date(o.createdAt).toLocaleString()}</span>
+  <div>${esc(o.name)} · <a href="tel:${esc(o.phone)}" style="color:var(--ac)">${esc(o.phone)}</a></div>
+  <div class="mu">${esc(o.address)}, ${esc(o.city)}, ${esc(o.state)} - ${esc(o.pincode)}</div>${o.notes?`<div>📝 ${esc(o.notes)}</div>`:''}
+  ${o.image?`<img class="p" style="margin-top:8px" src="${o.image}"><a class="btn" download="order-${o.id}.jpg" href="${o.image}">Download customer image</a>`:''}
+  <button class="sm s" onclick="delO('${o.id}')">Delete order</button></div>`).join('')||'<p class="mu">No orders yet.</p>';
+ }
+ app.innerHTML=h;
+}
+async function save(){
+ const name=$('#pn').value.trim(),price=$('#pp').value.trim();if(!name||!price){alert('Enter name and price');return}
+ const e=editing||{};let image=e.image||'';const f=$('#pi').files[0];if(f)image=await shrink(f,700);
+ try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,desc:$('#pd').value,image,allowUpload:$('#pu').checked,payLink:$('#pl').value.trim()})});
+  products=await api('products');editing=null;admin();scrollTo(0,0);
+  $('#res').innerHTML=`<div class="ok">Saved ✓ Share this link:</div><div class="link">${location.origin}/p/${p.id}</div><button class="sm" onclick="copyL('${p.id}')">Copy link</button>`;
+ }catch(x){alert(x.message)}
+}
+function editP(id){editing=products.find(p=>p.id===id);admin();scrollTo(0,0)}
+async function delP(id){if(confirm('Delete this product?')){await api('products?id='+id,{method:'DELETE'});products=products.filter(p=>p.id!==id);admin()}}
+async function delO(id){if(confirm('Delete this order?')){await api('orders?id='+id,{method:'DELETE'});orders=orders.filter(o=>o.id!==id);admin()}}
+function copyL(id){const t=location.origin+'/p/'+id;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('Link copied'),()=>prompt('Copy this link',t))}
+start();
+</script></body></html>
