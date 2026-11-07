@@ -70,6 +70,10 @@ input[type=color]{height:46px;padding:4px;width:90px}
 .badge{display:inline-block;padding:3px 12px;border-radius:999px;background:var(--btn);color:var(--btntx);font-size:13px;margin-left:6px}
 .stg{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bd)}.stg .row input[type=date]{width:auto;flex:1}.stg .row input[type=checkbox]{width:auto}
 details>summary{cursor:pointer;font-weight:600;margin-top:12px}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal .m{background:var(--bg);color:var(--ink);border-radius:var(--radius);padding:30px 22px 22px;max-width:380px;width:100%;text-align:center;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.m .em{font-size:56px;line-height:1.1}.m h2{font:800 22px var(--hf),sans-serif;margin:10px 0 8px}.m p{margin:0;opacity:.8;white-space:pre-wrap}.m .rf{font-size:13px;margin-top:10px;opacity:.6}
 .pv{background:#eee;padding:6px;border-radius:10px;margin-top:6px;display:inline-block;max-width:100%}.pv img{max-height:80px;max-width:100%;display:block}
 </style></head><body>
 <div class="ann" id="ann"><div id="mq"></div></div>
@@ -82,6 +86,7 @@ details>summary{cursor:pointer;font-weight:600;margin-top:12px}
 <div class="sb" id="sb"><input id="q" placeholder="Search products…" oninput="home(true)"></div>
 <div class="menu" id="menu" onclick="menu(0)"><div id="menuin" onclick="event.stopPropagation()"></div></div>
 <main id="app">Loading…</main>
+<div id="modal"></div>
 <footer id="ft"></footer><div id="wa"></div>
 <script>
 const $=s=>document.querySelector(s),app=$('#app');
@@ -91,7 +96,7 @@ const DEF={storeName:'Paalkovva.store',logo:'',logoHeight:56,annOn:true,annText:
 bannerOn:false,banner:'',tagOn:true,tagline:'MORE THAN A GIFT.',s1On:true,s1Title:'Create your masterpiece',s1Sub:'Custom art prints',s2Title:'View all products',s2Sub:'The prints our customers keep coming back for.',cols:'2',
 bg:'#ffffff',ink:'#111111',btn:'#111111',btnText:'#ffffff',price:'#111111',cardBg:'#ffffff',radius:22,hFont:'Montserrat',tFont:'Playfair Display',nFont:'Jost',
 getText:'Get Yours →',buyText:'Buy now',payText:'Pay now',successMsg:'Order saved ✓',
-menu:'Home|/\nAll products|/#all\nTrack order|/track',footerText:'© PAALKOVVA.STORE · MADE FOR EVERY MEMORY',ftBg:'#161616',ftColor:'#e8d9b5',whatsapp:'',instagram:''};
+menu:'Home|/\nAll products|/#all\nTrack order|/track',footerText:'© PAALKOVVA.STORE · MADE FOR EVERY MEMORY',ftBg:'#161616',ftColor:'#e8d9b5',whatsapp:'',instagram:'',thxTitle:'Thank you for your order! 🎉',thxMsg:'Your payment was successful and your order is confirmed.\nWe will keep you updated — you can track it anytime with your mobile number.',thxBtn:'Track my order'};
 let S={...DEF},D={},products=[],orders=[],tab='products',editing=null,buying=false,custImgs=[];
 let pw=sessionStorage.getItem('pw')||'';
 const path=location.pathname;
@@ -126,8 +131,9 @@ async function start(){
  if(path==='/admin'){document.querySelector('header').style.display='none';$('#ann').style.display='none';$('#ft').style.display='none';$('#nav').style.display='none';return adminStart()}
  if(path==='/track')return trackPage();
  try{products=await api('products')}catch(e){app.innerHTML='<p class="empty">Could not load. '+esc(e.message)+'</p>';return}
- if(path.startsWith('/p/'))return product(path.slice(3));
+ if(path.startsWith('/p/')){product(path.slice(3));return}
  home();
+ if(path==='/thank-you')thankYou();
  if(new URLSearchParams(location.search).get('search'))toggleSearch();
 }
 function home(filtering){
@@ -178,9 +184,36 @@ async function pay(id){
  const mt=b.texts.findIndex(t=>!t.value);if(mt>=0){alert('Please fill: '+b.texts[mt].label);return}
  const btn=$('#pay');btn.disabled=true;
  try{const r=await api('orders',{method:'POST',body:JSON.stringify(b)});
-  $('#msg').innerHTML=`<span class="ok">${esc(S.successMsg)}</span>`;
-  if(r.payLink)location.href=r.payLink;else $('#msg').innerHTML+=' Payment link not set yet — we will contact you.';
+  localStorage.setItem('pendingOrder',JSON.stringify({id:r.id,ref:r.ref,t:Date.now()}));
+  if(r.payButtonId)mountButton(r.payButtonId);
+  else if(r.payLink)location.href=r.payLink;
+  else $('#msg').innerHTML='<span class="ok">Order received.</span> Payment is not set up yet — we will contact you.';
  }catch(e){btn.disabled=false;alert(e.message)}
+}
+
+/* ---- thank-you popups ---- */
+function modal(html){$('#modal').innerHTML=`<div class="modal"><div class="m">${html}</div></div>`}
+function closeModal(){$('#modal').innerHTML=''}
+function showThanks(q){
+ if(q.failed)return modal(`<div class="em">😕</div><h2>Payment not completed</h2><p>Your payment did not go through, so the order was not placed. Please try again from the product page.</p><button class="btn" onclick="location.href='/'">Back to shop</button>`);
+ if(q.error)return modal(`<div class="em">⚠️</div><h2>We could not confirm yet</h2><p>${esc(q.error)}</p>${q.ref?`<div class="rf">Order ID: #${esc(q.ref)}</div>`:''}${q.pid?`<div class="rf">Payment ID: ${esc(q.pid)}</div>`:''}<button class="btn" onclick="location.href='/'">Back to shop</button>`);
+ modal(`<div class="em">🎉</div><h2>${esc(S.thxTitle)}</h2>${q.ref?`<div style="font:800 20px var(--hf),sans-serif;margin:4px 0 12px;letter-spacing:.05em">Order ID: #${esc(q.ref)}</div>`:''}<p>${esc(S.thxMsg)}</p>${q.pid?`<div class="rf">Payment ID: ${esc(q.pid)}</div>`:''}<button class="btn" onclick="location.href='/track'">${esc(S.thxBtn)}</button><button class="btn s" onclick="closeModal();if(path==='/thank-you')location.href='/'">Continue shopping</button>`);
+}
+async function thankYou(){
+ const q=new URLSearchParams(location.search),pid=q.get('razorpay_payment_id'),st=q.get('razorpay_payment_link_status');
+ if(st&&st!=='paid')return showThanks({failed:true});
+ let pend=null;try{pend=JSON.parse(localStorage.getItem('pendingOrder')||'null')}catch(e){}
+ if(!pend)return showThanks({pid});
+ modal('<div class="em">⏳</div><h2>Confirming your order…</h2>');
+ try{const r=await api('confirm',{method:'POST',body:JSON.stringify({orderId:pend.id,pid})});localStorage.removeItem('pendingOrder');showThanks({ref:r.ref,pid})}
+ catch(e){showThanks({error:e.message+' Please contact us with your Order ID.',ref:pend.ref,pid})}
+}
+function mountButton(id){
+ $('#pay').style.display='none';
+ $('#msg').innerHTML='<div id="rzp" style="margin-top:6px"></div><p class="mu">Opening secure payment… if it does not open, tap the Pay button above.</p>';
+ const f=document.createElement('form'),sc=document.createElement('script');
+ sc.src='https://checkout.razorpay.com/v1/payment-button.js';sc.setAttribute('data-payment_button_id',id);sc.async=true;f.appendChild(sc);$('#rzp').appendChild(f);
+ let n=0;const t=setInterval(()=>{const b=f.querySelector('button');if(b){clearInterval(t);try{b.click()}catch(e){}}else if(++n>40)clearInterval(t)},250);
 }
 
 /* ---- tracker ---- */
@@ -213,7 +246,7 @@ async function adminStart(){
  admin();
 }
 function login(){pw=$('#pw').value;sessionStorage.setItem('pw',pw);adminStart()}
-const tabs=()=>`<h3>Admin Panel</h3><div class="tabs">${[['products','Products'],['orders','Orders ('+orders.length+')'],['settings','Website']].map(([k,l])=>`<button class="btn ${tab===k?'':'s'}" onclick="tab='${k}';editing=null;setEdit({});admin()">${l}</button>`).join('')}</div>`;
+const tabs=()=>`<h3>Admin Panel</h3><div class="tabs">${[['products','Products'],['orders','Orders ('+orders.filter(isPaid).length+')'],['settings','Website']].map(([k,l])=>`<button class="btn ${tab===k?'':'s'}" onclick="tab='${k}';editing=null;setEdit({});admin()">${l}</button>`).join('')}</div>`;
 let imgF=[],txtF=[],allowImg=false,allowTxt=false;
 function listHtml(kind){const arr=kind==='img'?'imgF':'txtF',a=kind==='img'?imgF:txtF;
  return a.map((l,i)=>`<div class="row" style="margin-top:8px"><input value="${esc(l)}" placeholder="${kind==='img'?'Heading e.g. Upload your photo':'Heading e.g. Name to print'}" oninput="${arr}[${i}]=this.value"><button class="btn sm s" style="margin:0" onclick="rmF('${kind}',${i})">×</button></div>`).join('')+`<button class="btn sm s" onclick="addF('${kind}')">+ Add another ${kind==='img'?'image':'text'} field</button>`}
@@ -239,7 +272,13 @@ async function addManual(){
  const phone=$('#mo_p').value.replace(/\D/g,'');if(phone.length<10){alert('Enter a 10-digit phone number');return}
  try{await api('orders?manual=1',{method:'POST',body:JSON.stringify({phone,name:$('#mo_n').value,productName:$('#mo_i').value.trim()||'Order'})});orders=await api('orders');admin()}catch(e){alert(e.message)}
 }
+const isPaid=o=>o.status!=='pending';
 function payLine(p){if(!p||!p.mode)return'';if(p.mode==='prepaid')return `Prepaid · Total ₹${p.total}`;return `COD · Total ₹${p.total} · Advance paid ₹${p.advance} · Pay on delivery ₹${p.cod}`}
+function pendingHtml(){
+ const pl=orders.filter(o=>!isPaid(o));if(!pl.length)return'';
+ return `<details class="card2"><summary>Unpaid / not redirected (${pl.length})</summary><p class="mu">These customers filled the form but did not come back from Razorpay, so they are not counted as orders. If you can see their payment in Razorpay, tap “Mark as paid”.</p>`+pl.map(o=>`<div class="stg"><b>${esc(o.productName)}</b> · ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a><div class="mu">#${esc(String(o.id).slice(0,6).toUpperCase())} · ${new Date(o.createdAt).toLocaleString()}</div><button class="btn sm" onclick="markPaid('${o.id}')">Mark as paid</button><button class="btn sm s" onclick="delO('${o.id}')">Delete</button></div>`).join('')+`</details>`;
+}
+async function markPaid(id){if(!confirm('Mark this order as paid?'))return;try{const o=await api('orders',{method:'PUT',body:JSON.stringify({id,confirm:true})});orders=orders.map(x=>x.id===id?o:x);admin()}catch(e){alert(e.message)}}
 function pmHtml(o){
  const p=o.payment||{mode:'',total:Number(o.price)||'',advance:0};
  return `<details><summary>Payment${p.mode?' · '+(p.mode==='cod'?'COD':'Prepaid'):''}</summary>
@@ -272,15 +311,16 @@ function admin(){
   <div id="imgbox"></div>
   <div class="chk"><input type="checkbox" ${allowTxt?'checked':''} onchange="togF('txt',this.checked)"><span><b>Customer text input</b> ON/OFF (for custom text products)</span></div>
   <div id="txtbox"></div>
-  <label>Razorpay payment link</label><input id="pl" type="url" placeholder="https://rzp.io/..." value="${esc(e.payLink)}">
+  <label>Razorpay Payment Button code (paste the HTML code from Razorpay)</label><textarea id="pb" placeholder="Paste the code here">${esc(e.payButtonId)}</textarea>
+  <label>Or a Razorpay payment link (used only if no button code)</label><input id="pl" type="url" placeholder="https://rzp.io/..." value="${esc(e.payLink)}">
   <button class="btn" onclick="save()">${editing?'Update product':'Save product & get link'}</button>${editing?'<button class="btn s" onclick="editing=null;setEdit({});admin()">Cancel</button>':''}
   <div id="res"></div></div><h3>All products</h3>`;
-  h+=products.map(p=>`<div class="card2 row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Image upload: ${p.allowUpload?'ON ('+((p.imageFields||[]).length||1)+')':'OFF'} · Text: ${p.allowText?'ON ('+(p.textFields||[]).length+')':'OFF'}${p.featured?' · In slider':''}</div><div class="link">${location.origin}/p/${p.id}</div>
+  h+=products.map(p=>`<div class="card2 row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Image upload: ${p.allowUpload?'ON ('+((p.imageFields||[]).length||1)+')':'OFF'} · Text: ${p.allowText?'ON ('+(p.textFields||[]).length+')':'OFF'}${p.featured?' · In slider':''} · Razorpay button: ${p.payButtonId?'✓':'—'}</div><div class="link">${location.origin}/p/${p.id}</div>
   <button class="btn sm" onclick="copyL('${p.id}')">Copy link</button><button class="btn sm s" onclick="editP('${p.id}')">Edit</button><button class="btn sm s" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')||'<p class="mu">No products yet.</p>';
  }else{
   h+=`<button class="btn s" onclick="adminStart()">Refresh</button>
   <details class="card2"><summary>+ Add order manually (phone &amp; status)</summary><label>Phone number</label><input id="mo_p" type="tel" inputmode="tel"><label>Customer name (optional)</label><input id="mo_n"><label>Item</label><input id="mo_i"><button class="btn" onclick="addManual()">Add order</button></details>`+
-  orders.map(o=>{const imgs=o.images||(o.image?[{label:'Image',data:o.image}]:[]);return `<div class="card2"><b>${esc(o.productName)}</b>${o.price?' · ₹'+esc(o.price):''} <span class="badge">${current(stageOf(o))}</span> <span class="mu">${new Date(o.createdAt).toLocaleString()}</span>
+  orders.filter(isPaid).map(o=>{const imgs=o.images||(o.image?[{label:'Image',data:o.image}]:[]);return `<div class="card2"><div class="mu">Order #${esc(String(o.id).slice(0,6).toUpperCase())}${o.paid?(o.paid.verified?' · Paid ✓ verified':o.paid.manual?' · Marked as paid':' · Paid (redirected back)'):''}</div><b>${esc(o.productName)}</b>${o.price?' · ₹'+esc(o.price):''} <span class="badge">${current(stageOf(o))}</span> <span class="mu">${new Date(o.createdAt).toLocaleString()}</span>
   <div>${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
   ${o.address?`<div class="mu">${esc(o.address)}, ${esc(o.city)}, ${esc(o.state)} - ${esc(o.pincode)}</div>`:''}${o.notes?`<div>📝 ${esc(o.notes)}</div>`:''}
   ${(o.texts||[]).map(t=>`<div><span class="mu">${esc(t.label)}:</span> <b>${esc(t.value)}</b></div>`).join('')}
@@ -289,6 +329,7 @@ function admin(){
   ${pmHtml(o)}
   <details><summary>Tracking</summary>${trkRows(o)}<button class="btn" onclick="saveTrack('${o.id}')">Update tracking</button></details>
   <button class="btn sm s" onclick="delO('${o.id}')">Delete order</button></div>`}).join('')||'<p class="mu">No orders yet.</p>';
+  h+=pendingHtml();
  }
  app.innerHTML=h+'</div>';
  if(tab==='products')drawLists();
@@ -296,8 +337,8 @@ function admin(){
 async function save(){
  const name=$('#pn').value.trim(),price=$('#pp').value.trim();if(!name||!price){alert('Enter name and price');return}
  const e=editing||{};let image=e.image||'';const f=$('#pi').files[0];if(f)image=await shrink(f,800);
- const iF=imgF.map(x=>x.trim()).filter(Boolean),tF=txtF.map(x=>x.trim()).filter(Boolean);
- try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,priceLabel:$('#pg').value.trim()||'JUST',desc:$('#pd').value,image,allowUpload:allowImg&&iF.length>0,imageFields:allowImg?iF.map(label=>({label})):[],allowText:allowTxt&&tF.length>0,textFields:allowTxt?tF.map(label=>({label})):[],featured:$('#pf').checked,payLink:$('#pl').value.trim()})});
+ const bm=($('#pb').value||'').match(/pl_[A-Za-z0-9]+/);const iF=imgF.map(x=>x.trim()).filter(Boolean),tF=txtF.map(x=>x.trim()).filter(Boolean);
+ try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,priceLabel:$('#pg').value.trim()||'JUST',desc:$('#pd').value,image,allowUpload:allowImg&&iF.length>0,imageFields:allowImg?iF.map(label=>({label})):[],allowText:allowTxt&&tF.length>0,textFields:allowTxt?tF.map(label=>({label})):[],featured:$('#pf').checked,payLink:$('#pl').value.trim(),payButtonId:bm?bm[0]:''})});
   products=await api('products');editing=null;setEdit({});admin();scrollTo(0,0);
   $('#res').innerHTML=`<div class="ok">Saved ✓ Share this link:</div><div class="link">${location.origin}/p/${p.id}</div><button class="btn sm" onclick="copyL('${p.id}')">Copy link</button>`;
  }catch(x){alert(x.message)}
@@ -316,10 +357,12 @@ const SCHEMA=[
 ['Colours & style',[['bg','Page background','col'],['ink','Text colour','col'],['btn','Button colour','col'],['btnText','Button text colour','col'],['price','Price colour','col'],['cardBg','Product card colour','col'],['radius','Card corner roundness (px)','num',0,40]]],
 ['Fonts',[['hFont','Headings font','sel',FO],['tFont','Tagline font','sel',FO],['nFont','Product names & body font','sel',FO]]],
 ['Button & message text',[['getText','Product card button','text'],['buyText','Buy now button','text'],['payText','Pay now button','text'],['successMsg','Order saved message','text']]],
+['Thank-you popup',[['thxTitle','Popup heading','text'],['thxMsg','Popup message','area'],['thxBtn','Track button text','text'],['','Paste this in Razorpay → Payment Button → Custom Message and Redirect to a URL → Redirect URL','note']]],
 ['Menu & footer',[['menu','Menu links (one per line: Name|/link)','area'],['footerText','Footer text','text'],['ftBg','Footer background','col'],['ftColor','Footer text colour','col'],['whatsapp','WhatsApp number with country code (shows chat button)','text'],['instagram','Instagram link','text']]]
 ];
 function fld([k,l,t,a,b]){
  const v=D[k]??DEF[k];
+ if(t==='note')return `<label>${l}</label><div class="link">${location.origin}/thanks</div>`;
  if(t==='chk')return `<div class="chk"><input type="checkbox" ${v?'checked':''} onchange="D['${k}']=this.checked"><span>${l}</span></div>`;
  let i='';
  if(t==='text')i=`<input value="${esc(v)}" oninput="D['${k}']=this.value">`;
@@ -335,7 +378,7 @@ function settings(){
  if(!Object.keys(D).length)D={...S};
  app.innerHTML=`<div class="ad">${tabs()}<div class="mu" style="margin-top:10px">Change anything below, then press Save. <a href="/" target="_blank">Open website ↗</a></div>`+
  SCHEMA.map(([t,fs])=>`<div class="card2"><h3>${t}</h3>${fs.map(fld).join('')}</div>`).join('')+
- `<button class="btn" onclick="saveSettings()">Save website settings</button><button class="btn s" onclick="if(confirm('Reset everything to default?')){D={...DEF};settings()}">Reset to default</button><div id="sres" class="ok" style="margin-top:10px"></div></div>`;
+ `<button class="btn" onclick="saveSettings()">Save website settings</button><button class="btn s" onclick="showThanks({ref:'AB12CD'})">Preview thank-you popup</button><button class="btn s" onclick="if(confirm('Reset everything to default?')){D={...DEF};settings()}">Reset to default</button><div id="sres" class="ok" style="margin-top:10px"></div></div>`;
 }
 async function saveSettings(){
  try{await api('settings',{method:'POST',body:JSON.stringify(D)});S={...DEF,...D};theme();$('#sres').innerHTML='Saved ✓ Your website is updated. <a href="/" target="_blank">Open website ↗</a>';scrollTo(0,document.body.scrollHeight)}

@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       let list = await all('products');
       list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      if (!admin) list = list.map(({ payLink, ...p }) => p); // pay link stays private until an order is placed
+      if (!admin) list = list.map(({ payLink, payButtonId, ...p }) => p); // pay link stays private until an order is placed
       return res.json(list);
     }
     if (!admin) return res.status(401).json({ error: 'Wrong admin password' });
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
       const b = req.body || {};
       if (!b.name || !b.price) return res.status(400).json({ error: 'Name and price required' });
       const id = b.id || rid();
-      const p = { id, name: String(b.name), price: String(b.price), desc: String(b.desc || ''), image: String(b.image || ''), allowUpload: !!b.allowUpload, allowText: !!b.allowText, imageFields: (Array.isArray(b.imageFields) ? b.imageFields : []).slice(0, 10).map(f => ({ label: String(f.label || '').slice(0, 80) })), textFields: (Array.isArray(b.textFields) ? b.textFields : []).slice(0, 10).map(f => ({ label: String(f.label || '').slice(0, 80) })), featured: !!b.featured, priceLabel: String(b.priceLabel || 'JUST'), payLink: String(b.payLink || ''), createdAt: b.createdAt || Date.now() };
+      const p = { id, name: String(b.name), price: String(b.price), desc: String(b.desc || ''), image: String(b.image || ''), allowUpload: !!b.allowUpload, allowText: !!b.allowText, imageFields: (Array.isArray(b.imageFields) ? b.imageFields : []).slice(0, 10).map(f => ({ label: String(f.label || '').slice(0, 80) })), textFields: (Array.isArray(b.textFields) ? b.textFields : []).slice(0, 10).map(f => ({ label: String(f.label || '').slice(0, 80) })), featured: !!b.featured, priceLabel: String(b.priceLabel || 'JUST'), payLink: String(b.payLink || ''), payButtonId: /^pl_[A-Za-z0-9]+$/.test(String(b.payButtonId || '')) ? String(b.payButtonId) : '', createdAt: b.createdAt || Date.now() };
       await cmd('HSET', 'products', id, JSON.stringify(p));
       return res.json(p);
     }

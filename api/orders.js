@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
         if (!isAdmin(req)) return res.status(401).json({ error: 'Wrong admin password' });
         const phone = String(b.phone || '').replace(/\D/g, '').slice(-10);
         if (phone.length !== 10) return res.status(400).json({ error: 'Enter a 10-digit phone number' });
-        const o = { id, productId: '', productName: String(b.productName || 'Order'), price: '', name: String(b.name || ''), phone, address: '', city: '', state: '', pincode: '', notes: '', images: [], texts: [], createdAt: Date.now(), stages: { ordered: { date: today() } } };
+        const o = { id, productId: '', productName: String(b.productName || 'Order'), price: '', name: String(b.name || ''), phone, address: '', city: '', state: '', pincode: '', notes: '', images: [], texts: [], createdAt: Date.now(), status: 'confirmed', stages: { ordered: { date: today() } } };
         await cmd('HSET', 'orders', id, JSON.stringify(o));
         return res.json(o);
       }
@@ -27,10 +27,10 @@ module.exports = async (req, res) => {
       if (images.length < imgReq || images.slice(0, imgReq).some(i => !i.data)) return res.status(400).json({ error: 'Please upload all required images' });
       if (texts.length < txtReq || texts.slice(0, txtReq).some(t => !t.value.trim())) return res.status(400).json({ error: 'Please fill all required text fields' });
       if (images.reduce((n, i) => n + i.data.length, 0) > 800000) return res.status(400).json({ error: 'Images are too large. Please use smaller images.' });
-      const o = { id, productId: p.id, productName: p.name, price: p.price, createdAt: Date.now(), images: images.slice(0, imgReq), texts: texts.slice(0, txtReq), stages: { ordered: { date: today() } } };
+      const o = { id, productId: p.id, productName: p.name, price: p.price, createdAt: Date.now(), status: 'pending', images: images.slice(0, imgReq), texts: texts.slice(0, txtReq), stages: { ordered: { date: today() } } };
       need.concat('notes').forEach(k => (o[k] = String(b[k] || '').trim()));
       await cmd('HSET', 'orders', id, JSON.stringify(o));
-      return res.json({ ok: true, payLink: p.payLink });
+      return res.json({ ok: true, id, ref: id.slice(0, 6).toUpperCase(), payLink: p.payLink || '', payButtonId: p.payButtonId || '' });
     }
     if (!isAdmin(req)) return res.status(401).json({ error: 'Wrong admin password' });
     if (req.method === 'GET') {
@@ -39,10 +39,11 @@ module.exports = async (req, res) => {
       return res.json(list);
     }
     if (req.method === 'PUT') { // update tracking stages
-      const { id, stages, payment } = req.body || {};
+      const { id, stages, payment, confirm } = req.body || {};
       const raw = await cmd('HGET', 'orders', String(id));
       if (!raw) return res.status(404).json({ error: 'Order not found' });
       const o = JSON.parse(raw);
+      if (confirm) { o.status = 'confirmed'; o.paid = { manual: true, at: Date.now() }; }
       if (stages !== undefined) {
         const ok = ['ordered', 'shipped', 'intransit', 'delivered', 'reattempt', 'return'];
         o.stages = {};
