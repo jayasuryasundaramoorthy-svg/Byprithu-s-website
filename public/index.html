@@ -31,7 +31,7 @@ header .l{display:flex}header .r{display:flex;justify-content:flex-end}
 .car .card{flex:0 0 min(300px,76vw);scroll-snap-align:start}
 .grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px;padding:6px 16px 40px;max-width:900px;margin:0 auto}
 .card{background:var(--cardbg);border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.08);display:flex;flex-direction:column;text-decoration:none}
-.card .im{aspect-ratio:3/4;background:#f1efeb}.card .im img{width:100%;height:100%;object-fit:cover;display:block}
+.card .im{aspect-ratio:3/4;background:#f1efeb;position:relative;overflow:hidden}.card .im img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .8s}.card .im img.on{opacity:1}
 .card .bd{padding:16px 18px 20px}
 .nm{font:italic 400 clamp(17px,4.4vw,21px)/1.2 var(--nf),sans-serif;opacity:.75;margin:0 0 6px}
 .pr{font:800 clamp(16px,4.4vw,22px)/1.15 var(--hf),sans-serif;text-transform:uppercase;margin:0 0 14px;color:var(--price)}
@@ -74,6 +74,13 @@ details>summary{cursor:pointer;font-weight:600;margin-top:12px}
 .modal .m{background:var(--bg);color:var(--ink);border-radius:var(--radius);padding:30px 22px 22px;max-width:380px;width:100%;text-align:center;animation:pop .35s ease}
 @keyframes pop{from{transform:scale(.85);opacity:0}}
 .m .em{font-size:56px;line-height:1.1}.m h2{font:800 22px var(--hf),sans-serif;margin:10px 0 8px}.m p{margin:0;opacity:.8;white-space:pre-wrap}.m .rf{font-size:13px;margin-top:10px;opacity:.6}
+.gal{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.08);background:#f1efeb}
+.gs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.gs::-webkit-scrollbar{display:none}
+.gs img{flex:0 0 100%;width:100%;scroll-snap-align:center;aspect-ratio:4/5;object-fit:cover;display:block}
+.gal .ar{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#111;font-size:20px;cursor:pointer;display:none}
+@media(hover:hover){.gal .ar{display:block}}.gal .ar.l{left:8px}.gal .ar.r{right:8px}
+.dots{display:flex;justify-content:center;gap:7px;padding:10px 0 4px}.dots i{width:8px;height:8px;border-radius:50%;background:#ccc;transition:.2s}.dots i.on{background:var(--btn);width:20px;border-radius:6px}
+.gs-ad{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 0}.gi{flex:0 0 140px;scroll-snap-align:start;text-align:center}.gi img{width:140px;height:140px;object-fit:cover;border-radius:12px;display:block}.cv{display:block;margin-top:6px;font-size:13px;color:#15803d;font-weight:600}
 .pv{background:#eee;padding:6px;border-radius:10px;margin-top:6px;display:inline-block;max-width:100%}.pv img{max-height:80px;max-width:100%;display:block}
 </style></head><body>
 <div class="ann" id="ann"><div id="mq"></div></div>
@@ -92,7 +99,7 @@ details>summary{cursor:pointer;font-weight:600;margin-top:12px}
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const FONTS={'Montserrat':'Montserrat:ital,wght@0,400;0,500;0,800;1,400','Poppins':'Poppins:ital,wght@0,400;0,500;0,700;1,400','Raleway':'Raleway:ital,wght@0,400;0,500;0,800;1,400','Jost':'Jost:ital,wght@0,400;0,500;0,700;1,400','Playfair Display':'Playfair+Display:ital,wght@0,400;0,700;0,800;1,400','Cormorant Garamond':'Cormorant+Garamond:ital,wght@0,400;0,700;1,400','Lora':'Lora:ital,wght@0,400;0,700;1,400','Oswald':'Oswald:wght@400;500;700'};
-const DEF={storeName:'Paalkovva.store',logo:'',logoHeight:56,annOn:true,annText:'Made for every memory\nCrafted for everyone',annBg:'#161616',annColor:'#e8d9b5',annSpeed:22,annSize:15,annPad:16,
+const DEF={storeName:'Paalkovva.store',logo:'',logoHeight:56,annOn:true,annText:'Made for every memory\nCrafted for everyone',annBg:'#161616',annColor:'#e8d9b5',autoCards:true,cardSecs:3,autoGallery:true,gallerySecs:4,annSpeed:22,annSize:15,annPad:16,
 bannerOn:false,banner:'',tagOn:true,tagline:'MORE THAN A GIFT.',s1On:true,s1Title:'Create your masterpiece',s1Sub:'Custom art prints',s2Title:'View all products',s2Sub:'The prints our customers keep coming back for.',cols:'2',
 bg:'#ffffff',ink:'#111111',btn:'#111111',btnText:'#ffffff',price:'#111111',cardBg:'#ffffff',radius:22,hFont:'Montserrat',tFont:'Playfair Display',nFont:'Jost',
 getText:'Get Yours →',buyText:'Buy now',payText:'Pay now',successMsg:'Order saved ✓',
@@ -123,7 +130,8 @@ function theme(){
 const menu=o=>$('#menu').style.display=o?'block':'none';
 function toggleSearch(){if(path!=='/'){location.href='/?search=1';return}const s=$('#sb');s.style.display=s.style.display==='block'?'none':'block';if(s.style.display==='block')$('#q').focus()}
 const price=p=>`${esc((p.priceLabel||'JUST').toUpperCase())} @RS.${esc(p.price)}`;
-const card=p=>`<a class="card" href="/p/${p.id}"><div class="im">${p.image?`<img src="${p.image}" alt="" loading="lazy">`:''}</div><div class="bd"><p class="nm">${esc(p.name)}</p><p class="pr">${price(p)}</p><span class="gy">${esc(S.getText)}</span></div></a>`;
+const covers=p=>(p.thumbs&&p.thumbs.length)?p.thumbs:(p.image?[p.image]:[]);
+const card=p=>`<a class="card" href="/p/${p.id}"><div class="im" data-n="${covers(p).length}">${covers(p).map((s,i)=>`<img class="${i?'':'on'}" src="${s}" alt="" ${i?'loading="lazy"':''}>`).join('')}</div><div class="bd"><p class="nm">${esc(p.name)}</p><p class="pr">${price(p)}</p><span class="gy">${esc(S.getText)}</span></div></a>`;
 
 async function start(){
  try{S={...DEF,...(await fetch('/api/settings').then(r=>r.json()))}}catch(e){}
@@ -136,6 +144,9 @@ async function start(){
  if(path==='/thank-you')thankYou();
  if(new URLSearchParams(location.search).get('search'))toggleSearch();
 }
+let cardT=null,galT=null,galPause=0;
+function startCards(){clearInterval(cardT);if(!S.autoCards)return;
+ cardT=setInterval(()=>document.querySelectorAll('.im[data-n]').forEach(el=>{const n=+el.dataset.n;if(n<2)return;const im=[...el.children],i=im.findIndex(x=>x.classList.contains('on'));im[i].classList.remove('on');im[(i+1)%n].classList.add('on')}),Math.max(1,+S.cardSecs||3)*1000)}
 function home(filtering){
  const q=($('#q').value||'').toLowerCase().trim();
  const list=q?products.filter(p=>(p.name+' '+p.desc).toLowerCase().includes(q)):products;
@@ -148,6 +159,7 @@ function home(filtering){
  }
  app.innerHTML=top+`<div class="sec" id="all"><h2>${q?'Search results':esc(S.s2Title)}</h2>${q||!S.s2Sub?'':`<p>${esc(S.s2Sub)}</p>`}</div><div class="grid">${list.map(card).join('')||'<p class="empty">No products found.</p>'}</div>`;
  if(filtering)$('#q').focus();
+ startCards();
 }
 
 function fieldsOf(p){
@@ -169,8 +181,24 @@ function product(id){
  ${imgs.map((f,i)=>`<label>${esc(f.label)}</label><input type="file" accept="image/*" onchange="pick(${i},this)"><img id="pv${i}" style="display:none;margin-top:10px;width:100%;border-radius:12px">`).join('')}
  ${txts.map((f,i)=>`<label>${esc(f.label)}</label><input id="tx${i}" maxlength="300">`).join('')}
  <button class="btn" id="pay" onclick="pay('${id}')">${esc(S.payText)}</button><div id="msg" class="mu" style="margin-top:8px"></div></div>`;
- app.innerHTML=`<div class="pp"><div>${p.image?`<img class="big" src="${p.image}" alt="">`:''}</div><div><h1>${esc(p.name)}</h1><p class="pr">${price(p)}</p><p class="desc">${esc(p.desc)}</p>${buy}</div></div>`;
+ app.innerHTML=`<div class="pp"><div><div id="gal"></div></div><div><h1>${esc(p.name)}</h1><p class="pr">${price(p)}</p><p class="desc">${esc(p.desc)}</p>${buy}</div></div>`;
  custImgs.forEach((c,i)=>{if(c.data){const v=$('#pv'+i);if(v){v.src=c.data;v.style.display='block'}}});
+ gallery(covers(p));
+ api('products?id='+id).then(f=>{if(f.images&&f.images.length)gallery(f.images)}).catch(()=>{});
+}
+function gallery(list){
+ clearInterval(galT);const g=$('#gal');if(!g)return;
+ if(!list.length){g.style.display='none';return}g.style.display='block';
+ const n=list.length;
+ g.innerHTML=`<div class="gs" id="gs">${list.map(s=>`<img src="${s}" alt="">`).join('')}</div>${n>1?`<button class="ar l" aria-label="Previous">‹</button><button class="ar r" aria-label="Next">›</button>`:''}`;
+ if(n<2)return;
+ g.insertAdjacentHTML('afterend',`<div class="dots" id="dots">${list.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`);
+ const old=document.querySelectorAll('#dots');if(old.length>1)old[0].remove();
+ const gs=$('#gs'),idx=()=>Math.round(gs.scrollLeft/gs.clientWidth),go=i=>gs.scrollTo({left:((i%n)+n)%n*gs.clientWidth,behavior:'smooth'});
+ gs.addEventListener('scroll',()=>{const c=idx();document.querySelectorAll('#dots i').forEach((d,i)=>d.classList.toggle('on',i===c))});
+ ['pointerdown','touchstart','wheel'].forEach(ev=>gs.addEventListener(ev,()=>galPause=Date.now()+8000,{passive:true}));
+ g.querySelector('.ar.l').onclick=()=>{galPause=Date.now()+8000;go(idx()-1)};g.querySelector('.ar.r').onclick=()=>{galPause=Date.now()+8000;go(idx()+1)};
+ if(S.autoGallery)galT=setInterval(()=>{if(Date.now()>galPause)go(idx()+1)},Math.max(1,+S.gallerySecs||4)*1000);
 }
 async function pick(i,inp){const f=inp.files[0];if(!f)return;custImgs[i].data=await shrink(f,custImgs.length>2?600:800);const v=$('#pv'+i);v.src=custImgs[i].data;v.style.display='block'}
 async function pay(id){
@@ -247,14 +275,23 @@ async function adminStart(){
 }
 function login(){pw=$('#pw').value;sessionStorage.setItem('pw',pw);adminStart()}
 const tabs=()=>`<h3>Admin Panel</h3><div class="tabs">${[['products','Products'],['orders','Orders ('+orders.filter(isPaid).length+')'],['settings','Website']].map(([k,l])=>`<button class="btn ${tab===k?'':'s'}" onclick="tab='${k}';editing=null;setEdit({});admin()">${l}</button>`).join('')}</div>`;
-let imgF=[],txtF=[],allowImg=false,allowTxt=false;
+let imgF=[],txtF=[],allowImg=false,allowTxt=false,aImgs=[];
 function listHtml(kind){const arr=kind==='img'?'imgF':'txtF',a=kind==='img'?imgF:txtF;
  return a.map((l,i)=>`<div class="row" style="margin-top:8px"><input value="${esc(l)}" placeholder="${kind==='img'?'Heading e.g. Upload your photo':'Heading e.g. Name to print'}" oninput="${arr}[${i}]=this.value"><button class="btn sm s" style="margin:0" onclick="rmF('${kind}',${i})">×</button></div>`).join('')+`<button class="btn sm s" onclick="addF('${kind}')">+ Add another ${kind==='img'?'image':'text'} field</button>`}
 function drawLists(){$('#imgbox').style.display=allowImg?'block':'none';$('#txtbox').style.display=allowTxt?'block':'none';$('#imgbox').innerHTML=listHtml('img');$('#txtbox').innerHTML=listHtml('txt')}
 function togF(kind,on){if(kind==='img'){allowImg=on;if(on&&!imgF.length)imgF=['Upload your image']}else{allowTxt=on;if(on&&!txtF.length)txtF=['Enter your text']}drawLists()}
 function addF(kind){(kind==='img'?imgF:txtF).push('');drawLists()}
 function rmF(kind,i){(kind==='img'?imgF:txtF).splice(i,1);drawLists()}
+function drawGal(){const b=$('#galbox');if(!b)return;
+ b.innerHTML=(aImgs.length?`<div class="gs-ad">${aImgs.map((x,i)=>`<div class="gi"><img src="${x.thumb||x.full}">${i===0?'<span class="cv">Cover</span>':`<button class="btn sm s" onclick="mkCover(${i})">Make cover</button>`}<button class="btn sm s" onclick="rmImg(${i})">Remove</button></div>`).join('')}</div>`:'')+`<div class="mu">${aImgs.length}/6 images${aImgs.length>1?' · swipe to see all':''}</div>`}
+async function addImgs(inp){
+ const fs=[...inp.files];for(const f of fs){if(aImgs.length>=6){alert('Maximum 6 images per product');break}aImgs.push({full:await shrink(f,700),thumb:await shrink(f,360)});drawGal()}inp.value=''}
+function mkCover(i){const [x]=aImgs.splice(i,1);aImgs.unshift(x);drawGal()}
+function rmImg(i){aImgs.splice(i,1);drawGal()}
+function resizeData(src,max){return new Promise(res=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};i.onerror=()=>res('');i.src=src})}
 function setEdit(e){
+ const full=(e.images&&e.images.length)?e.images:(e.image?[e.image]:[]);
+ aImgs=full.map((f,i)=>({full:f,thumb:(e.thumbs||[])[i]||''}));
  imgF=(e.imageFields&&e.imageFields.length)?e.imageFields.map(f=>f.label):(e.allowUpload?['Upload your image']:[]);
  txtF=(e.textFields||[]).map(f=>f.label);allowImg=!!e.allowUpload;allowTxt=!!e.allowText;
 }
@@ -305,7 +342,7 @@ function admin(){
   <label>Price (₹)</label><input id="pp" type="number" inputmode="decimal" value="${esc(e.price)}">
   <label>Price label (JUST / STARTING)</label><input id="pg" value="${esc(e.priceLabel||'JUST')}">
   <label>Description</label><textarea id="pd">${esc(e.desc)}</textarea>
-  <label>Product photo</label><input id="pi" type="file" accept="image/*">
+  <label>Product images (add several · first image is the cover)</label><input id="pi" type="file" accept="image/*" multiple onchange="addImgs(this)"><div id="galbox"></div>
   <div class="chk"><input type="checkbox" id="pf" ${e.featured?'checked':''}><span>Show in slider (home page)</span></div>
   <div class="chk"><input type="checkbox" ${allowImg?'checked':''} onchange="togF('img',this.checked)"><span><b>Customer image upload</b> ON/OFF</span></div>
   <div id="imgbox"></div>
@@ -315,7 +352,7 @@ function admin(){
   <label>Or a Razorpay payment link (used only if no button code)</label><input id="pl" type="url" placeholder="https://rzp.io/..." value="${esc(e.payLink)}">
   <button class="btn" onclick="save()">${editing?'Update product':'Save product & get link'}</button>${editing?'<button class="btn s" onclick="editing=null;setEdit({});admin()">Cancel</button>':''}
   <div id="res"></div></div><h3>All products</h3>`;
-  h+=products.map(p=>`<div class="card2 row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Image upload: ${p.allowUpload?'ON ('+((p.imageFields||[]).length||1)+')':'OFF'} · Text: ${p.allowText?'ON ('+(p.textFields||[]).length+')':'OFF'}${p.featured?' · In slider':''} · Razorpay button: ${p.payButtonId?'✓':'—'}</div><div class="link">${location.origin}/p/${p.id}</div>
+  h+=products.map(p=>`<div class="card2 row">${covers(p)[0]?`<img class="thumb" src="${covers(p)[0]}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Image upload: ${p.allowUpload?'ON ('+((p.imageFields||[]).length||1)+')':'OFF'} · Text: ${p.allowText?'ON ('+(p.textFields||[]).length+')':'OFF'}${p.featured?' · In slider':''} · Razorpay button: ${p.payButtonId?'✓':'—'}</div><div class="link">${location.origin}/p/${p.id}</div>
   <button class="btn sm" onclick="copyL('${p.id}')">Copy link</button><button class="btn sm s" onclick="editP('${p.id}')">Edit</button><button class="btn sm s" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')||'<p class="mu">No products yet.</p>';
  }else{
   h+=`<button class="btn s" onclick="adminStart()">Refresh</button>
@@ -332,18 +369,19 @@ function admin(){
   h+=pendingHtml();
  }
  app.innerHTML=h+'</div>';
- if(tab==='products')drawLists();
+ if(tab==='products'){drawLists();drawGal()}
 }
 async function save(){
  const name=$('#pn').value.trim(),price=$('#pp').value.trim();if(!name||!price){alert('Enter name and price');return}
- const e=editing||{};let image=e.image||'';const f=$('#pi').files[0];if(f)image=await shrink(f,800);
+ const e=editing||{};
+ const thumbs=await Promise.all(aImgs.slice(0,3).map(x=>x.thumb?x.thumb:resizeData(x.full,360)));
  const bm=($('#pb').value||'').match(/pl_[A-Za-z0-9]+/);const iF=imgF.map(x=>x.trim()).filter(Boolean),tF=txtF.map(x=>x.trim()).filter(Boolean);
- try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,priceLabel:$('#pg').value.trim()||'JUST',desc:$('#pd').value,image,allowUpload:allowImg&&iF.length>0,imageFields:allowImg?iF.map(label=>({label})):[],allowText:allowTxt&&tF.length>0,textFields:allowTxt?tF.map(label=>({label})):[],featured:$('#pf').checked,payLink:$('#pl').value.trim(),payButtonId:bm?bm[0]:''})});
+ try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,priceLabel:$('#pg').value.trim()||'JUST',desc:$('#pd').value,image:'',images:aImgs.map(x=>x.full),thumbs:thumbs.filter(Boolean),allowUpload:allowImg&&iF.length>0,imageFields:allowImg?iF.map(label=>({label})):[],allowText:allowTxt&&tF.length>0,textFields:allowTxt?tF.map(label=>({label})):[],featured:$('#pf').checked,payLink:$('#pl').value.trim(),payButtonId:bm?bm[0]:''})});
   products=await api('products');editing=null;setEdit({});admin();scrollTo(0,0);
   $('#res').innerHTML=`<div class="ok">Saved ✓ Share this link:</div><div class="link">${location.origin}/p/${p.id}</div><button class="btn sm" onclick="copyL('${p.id}')">Copy link</button>`;
  }catch(x){alert(x.message)}
 }
-function editP(id){editing=products.find(p=>p.id===id);setEdit(editing);admin();scrollTo(0,0)}
+async function editP(id){try{editing=await api('products?id='+id)}catch(e){editing=products.find(p=>p.id===id)}setEdit(editing);admin();scrollTo(0,0)}
 async function delP(id){if(confirm('Delete this product?')){await api('products?id='+id,{method:'DELETE'});products=products.filter(p=>p.id!==id);admin()}}
 async function delO(id){if(confirm('Delete this order?')){await api('orders?id='+id,{method:'DELETE'});orders=orders.filter(o=>o.id!==id);admin()}}
 function copyL(id){const t=location.origin+'/p/'+id;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('Link copied'),()=>prompt('Copy this link',t))}
@@ -354,6 +392,7 @@ const SCHEMA=[
 ['Branding',[['storeName','Store name','text'],['logo','Logo (PNG with transparent background looks best)','img'],['logoHeight','Logo height (px)','num',30,120]]],
 ['Announcement bar',[['annOn','Show announcement bar','chk'],['annText','Messages (one per line)','area'],['annBg','Background colour','col'],['annColor','Text colour','col'],['annSize','Text size (px)','num',10,32],['annPad','Bar height / spacing (px)','num',2,40],['annSpeed','Scroll time in seconds (lower = faster)','num',8,60]]],
 ['Home page',[['bannerOn','Show banner image at top','chk'],['banner','Banner image','img'],['tagOn','Show tagline','chk'],['tagline','Tagline','text'],['s1On','Show slider section (products ticked “Show in slider”)','chk'],['s1Title','Slider heading','text'],['s1Sub','Slider subtitle','text'],['s2Title','All products heading','text'],['s2Sub','All products subtitle','text'],['cols','Products per row (all products section)','sel',['1','2','3','4']]]],
+['Image slideshow',[['autoCards','Auto-change product cover images on cards','chk'],['cardSecs','Cover image change time (seconds)','num',1,15],['autoGallery','Auto-slide images on the product page','chk'],['gallerySecs','Product page slide time (seconds)','num',1,15]]],
 ['Colours & style',[['bg','Page background','col'],['ink','Text colour','col'],['btn','Button colour','col'],['btnText','Button text colour','col'],['price','Price colour','col'],['cardBg','Product card colour','col'],['radius','Card corner roundness (px)','num',0,40]]],
 ['Fonts',[['hFont','Headings font','sel',FO],['tFont','Tagline font','sel',FO],['nFont','Product names & body font','sel',FO]]],
 ['Button & message text',[['getText','Product card button','text'],['buyText','Buy now button','text'],['payText','Pay now button','text'],['successMsg','Order saved message','text']]],
