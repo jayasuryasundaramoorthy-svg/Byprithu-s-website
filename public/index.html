@@ -1,56 +1,149 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Shop</title>
+<title>Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="gf" rel="stylesheet" href="">
 <style>
-:root{--bg:#faf8f5;--card:#fff;--tx:#1f1d1a;--mu:#6f6a62;--bd:#e5e0d8;--ac:#c2410c;--act:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#171513;--card:#211f1c;--tx:#f2eee8;--mu:#a09a90;--bd:#38342f;--ac:#f97316;--act:#1a1209}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-.w{max-width:640px;margin:0 auto;padding:16px}h1{font-size:1.4rem;margin:.2em 0 .6em}h2{font-size:1.1rem;margin:1em 0 .4em}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
-label{display:block;font-size:.85rem;color:var(--mu);margin:10px 0 3px}
-input,textarea{width:100%;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}textarea{min-height:70px}
-button,.btn{display:inline-block;width:100%;padding:13px;margin-top:12px;border:0;border-radius:12px;background:var(--ac);color:var(--act);font:600 1rem inherit;text-align:center;text-decoration:none;cursor:pointer}
-button.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}button.sm{width:auto;padding:7px 12px;margin:6px 6px 0 0;font-size:.85rem}
-img.p{width:100%;max-height:320px;object-fit:cover;border-radius:12px}.thumb{width:90px;height:90px;object-fit:cover;border-radius:10px}
-.price{font-size:1.3rem;font-weight:700;color:var(--ac)}.mu{color:var(--mu);font-size:.85rem}.row{display:flex;gap:10px;align-items:center}
-.tabs{display:flex;gap:8px}.tabs button{margin:0}.chk{display:flex;gap:10px;align-items:center;margin-top:12px}.chk input{width:auto}
-.ok{color:#15803d;font-weight:600}.link{word-break:break-all;font-size:.85rem;background:var(--bg);padding:8px;border-radius:8px;margin-top:6px}
-</style></head><body><div class="w" id="app">Loading…</div>
+:root{--ink:#111;--bg:#fff;--btn:#111;--btntx:#fff;--price:#111;--cardbg:#fff;--radius:22px;--annbg:#161616;--anntx:#e8d9b5;--ftbg:#161616;--fttx:#e8d9b5;--hf:Montserrat;--tf:'Playfair Display';--nf:Jost;--mu:#777;--bd:#ececec;--cols:2;--spd:22s}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--nf),system-ui,sans-serif}
+a{color:inherit}
+.ann{background:var(--annbg);color:var(--anntx);overflow:hidden;white-space:nowrap;padding:16px 0;font:500 15px var(--hf),sans-serif;letter-spacing:.12em}
+.ann div{display:inline-block;animation:mq var(--spd) linear infinite}.ann span{margin:0 26px}
+@keyframes mq{to{transform:translateX(-50%)}}
+header{position:sticky;top:0;z-index:20;background:var(--bg);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 16px}
+header .l{display:flex}header .r{display:flex;justify-content:flex-end}
+.ib{background:none;border:0;padding:10px;cursor:pointer;color:var(--ink);display:flex}
+.ib svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo img{display:block;max-width:60vw;object-fit:contain}.logo b{font:800 22px var(--hf)}
+.sb{display:none;padding:8px 16px 14px}
+.sb input{width:100%;padding:13px 18px;border:1px solid var(--bd);border-radius:999px;font:inherit;background:#f7f7f7}
+.menu{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4)}
+.menu div{width:78%;max-width:320px;height:100%;background:var(--bg);padding:24px}
+.menu a{display:block;padding:14px 0;font:800 18px var(--hf),sans-serif;letter-spacing:.04em;text-decoration:none;border-bottom:1px solid var(--bd)}
+.banner{display:block;width:100%;max-height:420px;object-fit:cover}
+.tag{font:800 clamp(20px,4.5vw,32px) var(--tf),serif;letter-spacing:.14em;text-align:center;margin:34px 16px 44px}
+.sec{text-align:center;margin:30px 16px 26px}
+.sec h2{font:800 clamp(24px,5.5vw,38px) var(--hf),sans-serif;margin:0;text-transform:uppercase}
+.sec p{margin:10px 0 0;color:var(--mu);font:400 clamp(13px,3.2vw,17px) var(--hf),sans-serif;letter-spacing:.28em;text-transform:uppercase}
+.car{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 16px 26px;scrollbar-width:none}.car::-webkit-scrollbar{display:none}
+.car .card{flex:0 0 min(300px,76vw);scroll-snap-align:start}
+.grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px;padding:6px 16px 40px;max-width:1100px;margin:0 auto}
+@media(min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}}
+.card{background:var(--cardbg);border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.08);display:flex;flex-direction:column;text-decoration:none}
+.card .im{aspect-ratio:3/4;background:#f1efeb}.card .im img{width:100%;height:100%;object-fit:cover;display:block}
+.card .bd{padding:16px 18px 20px}
+.nm{font:italic 400 clamp(17px,4.4vw,21px)/1.2 var(--nf),sans-serif;opacity:.75;margin:0 0 6px}
+.pr{font:800 clamp(16px,4.4vw,22px)/1.15 var(--hf),sans-serif;text-transform:uppercase;margin:0 0 14px;color:var(--price)}
+.gy{display:inline-flex;align-items:center;gap:8px;background:var(--btn);color:var(--btntx);padding:12px 20px;border-radius:999px;font:500 16px var(--nf),sans-serif;border:0;cursor:pointer;text-decoration:none}
+.empty{text-align:center;color:var(--mu);padding:30px}
+footer{background:var(--ftbg);color:var(--fttx);text-align:center;padding:30px 16px;font:500 13px var(--hf),sans-serif;letter-spacing:.18em;margin-top:30px}
+footer a{margin:0 10px}
+.wa{position:fixed;right:16px;bottom:16px;z-index:30;width:56px;height:56px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);text-decoration:none;font-size:28px}
+.pp{max-width:900px;margin:0 auto;padding:10px 16px 20px;display:grid;gap:22px}
+@media(min-width:760px){.pp{grid-template-columns:1fr 1fr;align-items:start;padding-top:30px}}
+.pp img.big{width:100%;border-radius:var(--radius);display:block;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+.pp h1{font:italic 400 30px/1.2 var(--nf),sans-serif;margin:0 0 6px}
+.pp .pr{font-size:26px}.pp .desc{white-space:pre-wrap;opacity:.8}
+.box{border:1px solid var(--bd);border-radius:18px;padding:16px;margin-top:18px}
+.box h3,.ad h3{font:800 18px var(--hf),sans-serif;margin:0 0 4px;text-transform:uppercase}
+label{display:block;font-size:.85rem;color:var(--mu);margin:12px 0 4px}
+input,textarea,select{width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:12px;background:#fafafa;font:inherit;color:#111}textarea{min-height:72px}
+input[type=color]{height:46px;padding:4px;width:90px}
+.btn{display:block;width:100%;padding:15px;margin-top:16px;border:0;border-radius:999px;background:var(--btn);color:var(--btntx);font:500 17px var(--nf),sans-serif;text-align:center;text-decoration:none;cursor:pointer}
+.btn.s{background:#fff;color:#111;border:1px solid #111}.btn.sm{display:inline-block;width:auto;padding:8px 16px;margin:8px 8px 0 0;font-size:14px}
+.ok{color:#15803d;font-weight:500}.mu{color:var(--mu);font-size:.9rem}
+.thumb{width:84px;height:84px;object-fit:cover;border-radius:12px}.row{display:flex;gap:12px;align-items:center}
+.chk{display:flex;gap:10px;align-items:center;margin-top:14px}.chk input{width:auto}
+.link{word-break:break-all;font-size:.85rem;background:#f5f5f5;padding:8px 10px;border-radius:8px;margin-top:6px;color:#111}
+.ad{max-width:640px;margin:0 auto;padding:16px;color:#111}.ad .card2{border:1px solid var(--bd);border-radius:16px;padding:14px;margin:12px 0;background:#fff}
+.tabs{display:flex;gap:6px}.tabs .btn{margin:0;padding:12px 6px;font-size:15px}
+.pv{background:#eee;padding:6px;border-radius:10px;margin-top:6px;display:inline-block;max-width:100%}.pv img{max-height:80px;max-width:100%;display:block}
+</style></head><body>
+<div class="ann" id="ann"><div id="mq"></div></div>
+<header>
+ <div class="l"><button class="ib" aria-label="Menu" onclick="menu(1)"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16"/></svg></button></div>
+ <a class="logo" href="/" id="logo"></a>
+ <div class="r"><button class="ib" aria-label="Search" onclick="toggleSearch()"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button></div>
+</header>
+<div class="sb" id="sb"><input id="q" placeholder="Search products…" oninput="home(true)"></div>
+<div class="menu" id="menu" onclick="menu(0)"><div id="menuin" onclick="event.stopPropagation()"></div></div>
+<main id="app">Loading…</main>
+<footer id="ft"></footer><div id="wa"></div>
 <script>
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let products=[],orders=[],tab='products',editing=null,buying=false,custImg='';
+const FONTS={'Montserrat':'Montserrat:ital,wght@0,400;0,500;0,800;1,400','Poppins':'Poppins:ital,wght@0,400;0,500;0,700;1,400','Raleway':'Raleway:ital,wght@0,400;0,500;0,800;1,400','Jost':'Jost:ital,wght@0,400;0,500;0,700;1,400','Playfair Display':'Playfair+Display:ital,wght@0,400;0,700;0,800;1,400','Cormorant Garamond':'Cormorant+Garamond:ital,wght@0,400;0,700;1,400','Lora':'Lora:ital,wght@0,400;0,700;1,400','Oswald':'Oswald:wght@400;500;700'};
+const DEF={storeName:'Paalkovva.store',logo:'',logoHeight:56,annOn:true,annText:'Made for every memory\nCrafted for everyone',annBg:'#161616',annColor:'#e8d9b5',annSpeed:22,
+bannerOn:false,banner:'',tagOn:true,tagline:'MORE THAN A GIFT.',s1On:true,s1Title:'Create your masterpiece',s1Sub:'Custom art prints',s2Title:'View all products',s2Sub:'The prints our customers keep coming back for.',cols:'2',
+bg:'#ffffff',ink:'#111111',btn:'#111111',btnText:'#ffffff',price:'#111111',cardBg:'#ffffff',radius:22,hFont:'Montserrat',tFont:'Playfair Display',nFont:'Jost',
+getText:'Get Yours →',buyText:'Buy now',payText:'Pay now',successMsg:'Order saved ✓',
+menu:'Home|/\nAll products|/#all',footerText:'© PAALKOVVA.STORE · MADE FOR EVERY MEMORY',ftBg:'#161616',ftColor:'#e8d9b5',whatsapp:'',instagram:''};
+let S={...DEF},D={},products=[],orders=[],tab='products',editing=null,buying=false,custImg='';
 let pw=sessionStorage.getItem('pw')||'';
-const H=()=>({'Content-Type':'application/json','x-admin-password':pw});
-async function api(path,opt={}){const r=await fetch('/api/'+path,{...opt,headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Error');return j}
-function shrink(f,max){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};i.onerror=rej;i.src=r.result};r.onerror=rej;r.readAsDataURL(f)})}
 const path=location.pathname;
+const H=()=>({'Content-Type':'application/json','x-admin-password':pw});
+async function api(p,opt={}){const r=await fetch('/api/'+p,{...opt,headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Error');return j}
+function shrink(f,max,png){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(png?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.72))};i.onerror=rej;i.src=r.result};r.onerror=rej;r.readAsDataURL(f)})}
+
+function theme(){
+ const r=document.documentElement.style,m={'--ink':S.ink,'--bg':S.bg,'--btn':S.btn,'--btntx':S.btnText,'--price':S.price,'--cardbg':S.cardBg,'--radius':S.radius+'px','--annbg':S.annBg,'--anntx':S.annColor,'--ftbg':S.ftBg,'--fttx':S.ftColor,'--cols':S.cols,'--spd':S.annSpeed+'s','--hf':`'${S.hFont}'`,'--tf':`'${S.tFont}'`,'--nf':`'${S.nFont}'`};
+ for(const k in m)r.setProperty(k,m[k]);
+ const used=[...new Set([S.hFont,S.tFont,S.nFont])].filter(f=>FONTS[f]);
+ $('#gf').href='https://fonts.googleapis.com/css2?'+used.map(f=>'family='+FONTS[f]).join('&')+'&display=swap';
+ document.title=S.storeName;
+ $('#logo').innerHTML=(S.logo||'/logo.png')?`<img src="${S.logo||'/logo.png'}" alt="${esc(S.storeName)}" style="height:${S.logoHeight}px">`:`<b>${esc(S.storeName)}</b>`;
+ const items=S.annText.split('\n').map(x=>x.trim()).filter(Boolean);
+ $('#ann').style.display=(S.annOn&&items.length)?'block':'none';
+ $('#mq').innerHTML=(items.map(t=>`<span>${esc(t)}</span>`).join('✦')+'✦').repeat(Math.ceil(12/Math.max(items.length,1)));
+ $('#menuin').innerHTML=S.menu.split('\n').map(l=>l.split('|')).filter(a=>a[0].trim()).map(a=>`<a href="${esc((a[1]||'/').trim())}">${esc(a[0].trim())}</a>`).join('');
+ const links=[S.instagram&&`<a href="${esc(S.instagram)}" target="_blank" rel="noopener">INSTAGRAM</a>`,S.whatsapp&&`<a href="https://wa.me/${esc(S.whatsapp.replace(/\D/g,''))}" target="_blank" rel="noopener">WHATSAPP</a>`].filter(Boolean).join('');
+ $('#ft').innerHTML=(links?`<div style="margin-bottom:12px">${links}</div>`:'')+esc(S.footerText);
+ $('#wa').innerHTML=S.whatsapp?`<a class="wa" href="https://wa.me/${esc(S.whatsapp.replace(/\D/g,''))}" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>`:'';
+}
+const menu=o=>$('#menu').style.display=o?'block':'none';
+function toggleSearch(){if(path!=='/'){location.href='/?search=1';return}const s=$('#sb');s.style.display=s.style.display==='block'?'none':'block';if(s.style.display==='block')$('#q').focus()}
+const price=p=>`${esc((p.priceLabel||'JUST').toUpperCase())} @RS.${esc(p.price)}`;
+const card=p=>`<a class="card" href="/p/${p.id}"><div class="im">${p.image?`<img src="${p.image}" alt="" loading="lazy">`:''}</div><div class="bd"><p class="nm">${esc(p.name)}</p><p class="pr">${price(p)}</p><span class="gy">${esc(S.getText)}</span></div></a>`;
 
 async function start(){
- if(path==='/admin')return adminStart();
- try{products=await api('products')}catch(e){app.innerHTML='<div class="card">Could not load. '+esc(e.message)+'</div>';return}
+ try{S={...DEF,...(await fetch('/api/settings').then(r=>r.json()))}}catch(e){}
+ theme();
+ if(path==='/admin'){document.querySelector('header').style.display='none';$('#ann').style.display='none';$('#ft').style.display='none';return adminStart()}
+ try{products=await api('products')}catch(e){app.innerHTML='<p class="empty">Could not load. '+esc(e.message)+'</p>';return}
  if(path.startsWith('/p/'))return product(path.slice(3));
- app.innerHTML='<h1>🛍️ Shop</h1>'+(products.map(p=>`<a href="/p/${p.id}" style="text-decoration:none;color:inherit"><div class="card row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div><b>${esc(p.name)}</b><div class="price">₹${esc(p.price)}</div></div></div></a>`).join('')||'<p class="mu">No products yet.</p>');
+ home();
+ if(new URLSearchParams(location.search).get('search'))toggleSearch();
+}
+function home(filtering){
+ const q=($('#q').value||'').toLowerCase().trim();
+ const list=q?products.filter(p=>(p.name+' '+p.desc).toLowerCase().includes(q)):products;
+ let feat=products.filter(p=>p.featured);if(!feat.length)feat=products.slice(0,6);
+ let top='';
+ if(!q){
+  if(S.bannerOn&&S.banner)top+=`<img class="banner" src="${S.banner}" alt="">`;
+  if(S.tagOn&&S.tagline)top+=`<div class="tag">${esc(S.tagline)}</div>`;
+  if(S.s1On)top+=`<div class="sec"><h2>${esc(S.s1Title)}</h2><p>${esc(S.s1Sub)}</p></div><div class="car">${feat.map(card).join('')||'<p class="empty">Products coming soon.</p>'}</div>`;
+ }
+ app.innerHTML=top+`<div class="sec" id="all"><h2>${q?'Search results':esc(S.s2Title)}</h2>${q||!S.s2Sub?'':`<p>${esc(S.s2Sub)}</p>`}</div><div class="grid">${list.map(card).join('')||'<p class="empty">No products found.</p>'}</div>`;
+ if(filtering)$('#q').focus();
 }
 
-/* ---- customer ---- */
 function product(id){
  const p=products.find(x=>x.id===id);
- if(!p){app.innerHTML='<div class="card">Product not found.</div>';return}
- document.title=p.name;
- let h=`${p.image?`<img class="p" src="${p.image}">`:''}<h1>${esc(p.name)}</h1><div class="price">₹${esc(p.price)}</div><p style="white-space:pre-wrap">${esc(p.desc)}</p>`;
- if(!buying)h+=`<button onclick="buying=true;product('${id}')">Buy now</button>`;
- else h+=`<div class="card"><h2>Delivery details</h2>
+ if(!p){app.innerHTML='<p class="empty">Product not found.</p>';return}
+ document.title=p.name+' · '+S.storeName;
+ const buy=!buying?`<button class="btn" onclick="buying=true;product('${id}')">${esc(S.buyText)}</button>`:`<div class="box"><h3>Delivery details</h3>
  <label>Name</label><input id="cn" autocomplete="name">
  <label>Door number &amp; address</label><textarea id="ca" autocomplete="street-address"></textarea>
  <label>City</label><input id="cc"><label>State</label><input id="cs">
  <label>Pincode</label><input id="cp" inputmode="numeric" maxlength="6">
  <label>Contact number</label><input id="ct" type="tel" inputmode="tel" autocomplete="tel">
  <label>Notes (if any)</label><textarea id="cx"></textarea>
- ${p.allowUpload?`<label>Upload your image</label><input type="file" accept="image/*" onchange="pick(this)"><img id="pv" class="p" style="display:none;margin-top:8px">`:''}
- <button id="pay" onclick="pay('${id}')">Pay now</button><div id="msg" class="mu"></div></div>`;
- app.innerHTML=h;
+ ${p.allowUpload?`<label>Upload your image</label><input type="file" accept="image/*" onchange="pick(this)"><img id="pv" style="display:none;margin-top:10px;width:100%;border-radius:12px">`:''}
+ <button class="btn" id="pay" onclick="pay('${id}')">${esc(S.payText)}</button><div id="msg" class="mu" style="margin-top:8px"></div></div>`;
+ app.innerHTML=`<div class="pp"><div>${p.image?`<img class="big" src="${p.image}" alt="">`:''}</div><div><h1>${esc(p.name)}</h1><p class="pr">${price(p)}</p><p class="desc">${esc(p.desc)}</p>${buy}</div></div>`;
 }
 async function pick(i){const f=i.files[0];if(!f)return;custImg=await shrink(f,900);const v=$('#pv');v.src=custImg;v.style.display='block'}
 async function pay(id){
@@ -61,52 +154,91 @@ async function pay(id){
  if(!/^\d{10}$/.test(b.phone.replace(/\D/g,'').slice(-10))){alert('Enter a valid contact number');return}
  const btn=$('#pay');btn.disabled=true;
  try{const r=await api('orders',{method:'POST',body:JSON.stringify(b)});
-  $('#msg').innerHTML='<span class="ok">Order saved ✓</span>';
-  if(r.payLink)location.href=r.payLink;else $('#msg').innerHTML+=' Payment link not set yet — the seller will contact you.';
+  $('#msg').innerHTML=`<span class="ok">${esc(S.successMsg)}</span>`;
+  if(r.payLink)location.href=r.payLink;else $('#msg').innerHTML+=' Payment link not set yet — we will contact you.';
  }catch(e){btn.disabled=false;alert(e.message)}
 }
 
-/* ---- admin ---- */
+/* ---------------- admin ---------------- */
 async function adminStart(){
- if(!pw){app.innerHTML=`<h1>Admin login</h1><div class="card"><label>Password</label><input id="pw" type="password"><button onclick="login()">Login</button></div>`;return}
- try{[products,orders]=await Promise.all([api('products'),api('orders')])}catch(e){pw='';sessionStorage.removeItem('pw');app.innerHTML='<div class="card">'+esc(e.message)+'</div><button onclick="location.reload()">Try again</button>';return}
+ if(!pw){app.innerHTML=`<div class="ad"><h3>Admin login</h3><div class="card2"><label>Password</label><input id="pw" type="password"><button class="btn" onclick="login()">Login</button></div></div>`;return}
+ try{[products,orders]=await Promise.all([api('products'),api('orders')])}catch(e){pw='';sessionStorage.removeItem('pw');app.innerHTML='<div class="ad"><div class="card2">'+esc(e.message)+'</div><button class="btn" onclick="location.reload()">Try again</button></div>';return}
  admin();
 }
 function login(){pw=$('#pw').value;sessionStorage.setItem('pw',pw);adminStart()}
+const tabs=()=>`<h3>Admin Panel</h3><div class="tabs">${[['products','Products'],['orders','Orders ('+orders.length+')'],['settings','Website']].map(([k,l])=>`<button class="btn ${tab===k?'':'s'}" onclick="tab='${k}';editing=null;admin()">${l}</button>`).join('')}</div>`;
 function admin(){
- let h=`<h1>Admin Panel</h1><div class="tabs"><button class="${tab==='products'?'':'s'}" onclick="tab='products';editing=null;admin()">Products</button><button class="${tab==='orders'?'':'s'}" onclick="tab='orders';admin()">Orders (${orders.length})</button></div>`;
+ if(tab==='settings')return settings();
+ let h=`<div class="ad">${tabs()}`;
  if(tab==='products'){const e=editing||{};
-  h+=`<div class="card"><h2>${editing?'Edit':'Add'} product</h2>
+  h+=`<div class="card2"><h3>${editing?'Edit':'Add'} product</h3>
   <label>Product name</label><input id="pn" value="${esc(e.name)}">
   <label>Price (₹)</label><input id="pp" type="number" inputmode="decimal" value="${esc(e.price)}">
+  <label>Price label (JUST / STARTING)</label><input id="pg" value="${esc(e.priceLabel||'JUST')}">
   <label>Description</label><textarea id="pd">${esc(e.desc)}</textarea>
   <label>Product photo</label><input id="pi" type="file" accept="image/*">
   <div class="chk"><input type="checkbox" id="pu" ${e.allowUpload?'checked':''}><span>Let customer upload an image (ON/OFF)</span></div>
+  <div class="chk"><input type="checkbox" id="pf" ${e.featured?'checked':''}><span>Show in the home page slider</span></div>
   <label>Razorpay payment link</label><input id="pl" type="url" placeholder="https://rzp.io/..." value="${esc(e.payLink)}">
-  <button onclick="save()">${editing?'Update product':'Save product & get link'}</button>${editing?'<button class="s" onclick="editing=null;admin()">Cancel</button>':''}
-  <div id="res"></div></div><h2>All products</h2>`;
-  h+=products.map(p=>`<div class="card row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Upload: ${p.allowUpload?'ON':'OFF'}</div><div class="link">${location.origin}/p/${p.id}</div>
-  <button class="sm" onclick="copyL('${p.id}')">Copy link</button><button class="sm s" onclick="editP('${p.id}')">Edit</button><button class="sm s" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')||'<p class="mu">No products yet.</p>';
+  <button class="btn" onclick="save()">${editing?'Update product':'Save product & get link'}</button>${editing?'<button class="btn s" onclick="editing=null;admin()">Cancel</button>':''}
+  <div id="res"></div></div><h3>All products</h3>`;
+  h+=products.map(p=>`<div class="card2 row">${p.image?`<img class="thumb" src="${p.image}">`:''}<div style="flex:1"><b>${esc(p.name)}</b> · ₹${esc(p.price)}<div class="mu">Upload: ${p.allowUpload?'ON':'OFF'}${p.featured?' · Featured':''}</div><div class="link">${location.origin}/p/${p.id}</div>
+  <button class="btn sm" onclick="copyL('${p.id}')">Copy link</button><button class="btn sm s" onclick="editP('${p.id}')">Edit</button><button class="btn sm s" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')||'<p class="mu">No products yet.</p>';
  }else{
-  h+=`<button class="s" onclick="adminStart()">Refresh</button>`+orders.map(o=>`<div class="card"><b>${esc(o.productName)}</b> · ₹${esc(o.price)} <span class="mu">${new Date(o.createdAt).toLocaleString()}</span>
-  <div>${esc(o.name)} · <a href="tel:${esc(o.phone)}" style="color:var(--ac)">${esc(o.phone)}</a></div>
+  h+=`<button class="btn s" onclick="adminStart()">Refresh</button>`+orders.map(o=>`<div class="card2"><b>${esc(o.productName)}</b> · ₹${esc(o.price)} <span class="mu">${new Date(o.createdAt).toLocaleString()}</span>
+  <div>${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
   <div class="mu">${esc(o.address)}, ${esc(o.city)}, ${esc(o.state)} - ${esc(o.pincode)}</div>${o.notes?`<div>📝 ${esc(o.notes)}</div>`:''}
-  ${o.image?`<img class="p" style="margin-top:8px" src="${o.image}"><a class="btn" download="order-${o.id}.jpg" href="${o.image}">Download customer image</a>`:''}
-  <button class="sm s" onclick="delO('${o.id}')">Delete order</button></div>`).join('')||'<p class="mu">No orders yet.</p>';
+  ${o.image?`<img style="width:100%;border-radius:12px;margin-top:8px" src="${o.image}"><a class="btn" download="order-${o.id}.jpg" href="${o.image}">Download customer image</a>`:''}
+  <button class="btn sm s" onclick="delO('${o.id}')">Delete order</button></div>`).join('')||'<p class="mu">No orders yet.</p>';
  }
- app.innerHTML=h;
+ app.innerHTML=h+'</div>';
 }
 async function save(){
  const name=$('#pn').value.trim(),price=$('#pp').value.trim();if(!name||!price){alert('Enter name and price');return}
- const e=editing||{};let image=e.image||'';const f=$('#pi').files[0];if(f)image=await shrink(f,700);
- try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,desc:$('#pd').value,image,allowUpload:$('#pu').checked,payLink:$('#pl').value.trim()})});
+ const e=editing||{};let image=e.image||'';const f=$('#pi').files[0];if(f)image=await shrink(f,800);
+ try{const p=await api('products',{method:'POST',body:JSON.stringify({id:e.id,createdAt:e.createdAt,name,price,priceLabel:$('#pg').value.trim()||'JUST',desc:$('#pd').value,image,allowUpload:$('#pu').checked,featured:$('#pf').checked,payLink:$('#pl').value.trim()})});
   products=await api('products');editing=null;admin();scrollTo(0,0);
-  $('#res').innerHTML=`<div class="ok">Saved ✓ Share this link:</div><div class="link">${location.origin}/p/${p.id}</div><button class="sm" onclick="copyL('${p.id}')">Copy link</button>`;
+  $('#res').innerHTML=`<div class="ok">Saved ✓ Share this link:</div><div class="link">${location.origin}/p/${p.id}</div><button class="btn sm" onclick="copyL('${p.id}')">Copy link</button>`;
  }catch(x){alert(x.message)}
 }
 function editP(id){editing=products.find(p=>p.id===id);admin();scrollTo(0,0)}
 async function delP(id){if(confirm('Delete this product?')){await api('products?id='+id,{method:'DELETE'});products=products.filter(p=>p.id!==id);admin()}}
 async function delO(id){if(confirm('Delete this order?')){await api('orders?id='+id,{method:'DELETE'});orders=orders.filter(o=>o.id!==id);admin()}}
 function copyL(id){const t=location.origin+'/p/'+id;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert('Link copied'),()=>prompt('Copy this link',t))}
+
+/* ---- website customiser ---- */
+const FO=Object.keys(FONTS);
+const SCHEMA=[
+['Branding',[['storeName','Store name','text'],['logo','Logo (PNG with transparent background looks best)','img'],['logoHeight','Logo height (px)','num',30,120]]],
+['Announcement bar',[['annOn','Show announcement bar','chk'],['annText','Messages (one per line)','area'],['annBg','Background colour','col'],['annColor','Text colour','col'],['annSpeed','Scroll time in seconds (lower = faster)','num',8,60]]],
+['Home page',[['bannerOn','Show banner image at top','chk'],['banner','Banner image','img'],['tagOn','Show tagline','chk'],['tagline','Tagline','text'],['s1On','Show slider section','chk'],['s1Title','Slider heading','text'],['s1Sub','Slider subtitle','text'],['s2Title','All products heading','text'],['s2Sub','All products subtitle','text'],['cols','Products per row on mobile','sel',['1','2']]]],
+['Colours & style',[['bg','Page background','col'],['ink','Text colour','col'],['btn','Button colour','col'],['btnText','Button text colour','col'],['price','Price colour','col'],['cardBg','Product card colour','col'],['radius','Card corner roundness (px)','num',0,40]]],
+['Fonts',[['hFont','Headings font','sel',FO],['tFont','Tagline font','sel',FO],['nFont','Product names & body font','sel',FO]]],
+['Button & message text',[['getText','Product card button','text'],['buyText','Buy now button','text'],['payText','Pay now button','text'],['successMsg','Order saved message','text']]],
+['Menu & footer',[['menu','Menu links (one per line: Name|/link)','area'],['footerText','Footer text','text'],['ftBg','Footer background','col'],['ftColor','Footer text colour','col'],['whatsapp','WhatsApp number with country code (shows chat button)','text'],['instagram','Instagram link','text']]]
+];
+function fld([k,l,t,a,b]){
+ const v=D[k]??DEF[k];
+ if(t==='chk')return `<div class="chk"><input type="checkbox" ${v?'checked':''} onchange="D['${k}']=this.checked"><span>${l}</span></div>`;
+ let i='';
+ if(t==='text')i=`<input value="${esc(v)}" oninput="D['${k}']=this.value">`;
+ if(t==='area')i=`<textarea oninput="D['${k}']=this.value">${esc(v)}</textarea>`;
+ if(t==='col')i=`<input type="color" value="${esc(v)}" oninput="D['${k}']=this.value">`;
+ if(t==='num')i=`<input type="number" min="${a}" max="${b}" value="${esc(v)}" oninput="D['${k}']=+this.value">`;
+ if(t==='sel')i=`<select onchange="D['${k}']=this.value">${a.map(o=>`<option ${o===String(v)?'selected':''}>${o}</option>`).join('')}</select>`;
+ if(t==='img')i=`${v?`<div class="pv"><img src="${v}"></div><br>`:''}<input type="file" accept="image/*" onchange="upImg('${k}',this)">${v?`<button class="btn sm s" onclick="D['${k}']='';settings()">Remove</button>`:''}`;
+ return `<label>${l}</label>${i}`;
+}
+async function upImg(k,inp){const f=inp.files[0];if(!f)return;D[k]=await shrink(f,k==='logo'?500:1400,k==='logo');settings()}
+function settings(){
+ if(!Object.keys(D).length)D={...S};
+ app.innerHTML=`<div class="ad">${tabs()}<div class="mu" style="margin-top:10px">Change anything below, then press Save. <a href="/" target="_blank">Open website ↗</a></div>`+
+ SCHEMA.map(([t,fs])=>`<div class="card2"><h3>${t}</h3>${fs.map(fld).join('')}</div>`).join('')+
+ `<button class="btn" onclick="saveSettings()">Save website settings</button><button class="btn s" onclick="if(confirm('Reset everything to default?')){D={...DEF};settings()}">Reset to default</button><div id="sres" class="ok" style="margin-top:10px"></div></div>`;
+}
+async function saveSettings(){
+ try{await api('settings',{method:'POST',body:JSON.stringify(D)});S={...DEF,...D};theme();$('#sres').innerHTML='Saved ✓ Your website is updated. <a href="/" target="_blank">Open website ↗</a>';scrollTo(0,document.body.scrollHeight)}
+ catch(e){alert(e.message)}
+}
 start();
 </script></body></html>

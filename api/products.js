@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
       const b = req.body || {};
       if (!b.name || !b.price) return res.status(400).json({ error: 'Name and price required' });
       const id = b.id || rid();
-      const p = { id, name: String(b.name), price: String(b.price), desc: String(b.desc || ''), image: String(b.image || ''), allowUpload: !!b.allowUpload, payLink: String(b.payLink || ''), createdAt: b.createdAt || Date.now() };
+      const p = { id, name: String(b.name), price: String(b.price), desc: String(b.desc || ''), image: String(b.image || ''), allowUpload: !!b.allowUpload, featured: !!b.featured, priceLabel: String(b.priceLabel || 'JUST'), payLink: String(b.payLink || ''), createdAt: b.createdAt || Date.now() };
       await cmd('HSET', 'products', id, JSON.stringify(p));
       return res.json(p);
     }
