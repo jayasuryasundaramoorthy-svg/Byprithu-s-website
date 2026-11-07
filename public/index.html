@@ -196,7 +196,7 @@ function modal(html){$('#modal').innerHTML=`<div class="modal"><div class="m">${
 function closeModal(){$('#modal').innerHTML=''}
 function showThanks(q){
  if(q.failed)return modal(`<div class="em">😕</div><h2>Payment not completed</h2><p>Your payment did not go through, so the order was not placed. Please try again from the product page.</p><button class="btn" onclick="location.href='/'">Back to shop</button>`);
- if(q.error)return modal(`<div class="em">⚠️</div><h2>We could not confirm yet</h2><p>${esc(q.error)}</p>${q.ref?`<div class="rf">Order ID: #${esc(q.ref)}</div>`:''}${q.pid?`<div class="rf">Payment ID: ${esc(q.pid)}</div>`:''}<button class="btn" onclick="location.href='/'">Back to shop</button>`);
+ if(q.error)return modal(`<div class="em">⚠️</div><h2>We could not confirm yet</h2><p>${esc(q.error)}</p>${q.ref?`<div class="rf">Order ID: #${esc(q.ref)}</div>`:''}${q.pid?`<div class="rf">Payment ID: ${esc(q.pid)}</div>`:'<div class="rf">No payment ID was sent back by Razorpay.</div>'}<button class="btn" onclick="location.href='/'">Back to shop</button>`);
  modal(`<div class="em">🎉</div><h2>${esc(S.thxTitle)}</h2>${q.ref?`<div style="font:800 20px var(--hf),sans-serif;margin:4px 0 12px;letter-spacing:.05em">Order ID: #${esc(q.ref)}</div>`:''}<p>${esc(S.thxMsg)}</p>${q.pid?`<div class="rf">Payment ID: ${esc(q.pid)}</div>`:''}<button class="btn" onclick="location.href='/track'">${esc(S.thxBtn)}</button><button class="btn s" onclick="closeModal();if(path==='/thank-you')location.href='/'">Continue shopping</button>`);
 }
 async function thankYou(){
@@ -205,7 +205,7 @@ async function thankYou(){
  let pend=null;try{pend=JSON.parse(localStorage.getItem('pendingOrder')||'null')}catch(e){}
  if(!pend)return showThanks({pid});
  modal('<div class="em">⏳</div><h2>Confirming your order…</h2>');
- try{const r=await api('confirm',{method:'POST',body:JSON.stringify({orderId:pend.id,pid})});localStorage.removeItem('pendingOrder');showThanks({ref:r.ref,pid})}
+ try{const r=await api('confirm',{method:'POST',body:JSON.stringify({orderId:pend.id,pid})});localStorage.removeItem('pendingOrder');showThanks({ref:r.ref,pid:pid||r.pid})}
  catch(e){showThanks({error:e.message+' Please contact us with your Order ID.',ref:pend.ref,pid})}
 }
 function mountButton(id){
